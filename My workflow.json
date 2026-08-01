@@ -1,0 +1,371 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "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"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-haiku-4-5-20251001\",\n  \"max_tokens\": 300,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"You are a property management assistant. Classify the following maintenance request.\\n\\nRequest: {{ $json['Request Description'] }}\\n\\nReturn a JSON object with exactly these fields:\\n- urgency: either 'Emergency' or 'Standard'\\n- trade_type: one of 'Plumbing', 'Electrical', 'HVAC', 'General', 'Appliance', 'Roofing/Structure'\\n- reasoning: one sentence explaining your urgency classification\\n\\nReturn only valid JSON. No preamble or explanation outside the JSON object.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        304,
+        0
+      ],
+      "id": "56ddb1c0-6a81-4765-a3bf-d0deb729aaf0",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        0
+      ],
+      "id": "e98600d9-41cb-4b08-80b3-484336fd150c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1uRPEnJZqz553a_zQsXae5chn6z2ZKiF3Uf_M_p7e7Ug/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uRPEnJZqz553a_zQsXae5chn6z2ZKiF3Uf_M_p7e7Ug/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        96,
+        0
+      ],
+      "id": "2536ab81-076c-46a7-9665-46d2c54e35f2",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3Jj5118S1gmNGv1K",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9201723f-d79d-4f23-9d14-34c25c40e4ab",
+              "name": "urgency",
+              "value": "={{ JSON.parse($json.content[0].text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim()).urgency }}",
+              "type": "string"
+            },
+            {
+              "id": "577149ee-b768-49f6-af99-fc37896a5777",
+              "name": "trade_type",
+              "value": "={{ JSON.parse($json.content[0].text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim()).trade_type }}",
+              "type": "string"
+            },
+            {
+              "id": "38bb0641-b4cc-4125-a458-db981559ee10",
+              "name": "reasoning",
+              "value": "={{ JSON.parse($json.content[0].text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim()).reasoning }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        0
+      ],
+      "id": "867d21b8-26bc-4944-b243-e986122e0acf",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1y3EB5b8zAqXkX2sED3jDCf9DENOQSdwiErG9sm8LrgE/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1y3EB5b8zAqXkX2sED3jDCf9DENOQSdwiErG9sm8LrgE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Log ID": "={{ $('Get row(s) in sheet').item.json.row_number }}",
+            "Source Row (Inbox)": "={{ $('Get row(s) in sheet').item.json.row_number }}",
+            "Processed Timestamp": "={{ new Date().toISOString() }}",
+            "Tenant Name": "={{ $('Get row(s) in sheet').item.json['Tenant Name'] }}",
+            "Unit Number": "={{ $('Get row(s) in sheet').item.json['Unit Number'] }}",
+            "Classified Trade Type": "={{ $json.trade_type }}",
+            "Urgency Level": "={{ $json.urgency }}",
+            "Urgency Reasoning": "={{ $json.reasoning }}",
+            "Workflow Status": "Completed"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Log ID",
+              "displayName": "Log ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Source Row (Inbox)",
+              "displayName": "Source Row (Inbox)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Processed Timestamp",
+              "displayName": "Processed Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tenant Name",
+              "displayName": "Tenant Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Unit Number",
+              "displayName": "Unit Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Classified Trade Type",
+              "displayName": "Classified Trade Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Urgency Level",
+              "displayName": "Urgency Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Urgency Reasoning",
+              "displayName": "Urgency Reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Duplicate Detected?",
+              "displayName": "Duplicate Detected?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Assigned Contractor ID",
+              "displayName": "Assigned Contractor ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Assigned Contractor Name",
+              "displayName": "Assigned Contractor Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notification Sent To",
+              "displayName": "Notification Sent To",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notification Timestamp",
+              "displayName": "Notification Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notification Method",
+              "displayName": "Notification Method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Workflow Status",
+              "displayName": "Workflow Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error Notes",
+              "displayName": "Error Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        736,
+        0
+      ],
+      "id": "4fc6c3bd-b1cd-4ce8-aa46-d80eb926c4ed",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3Jj5118S1gmNGv1K",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b81a6fc9-b594-4690-b10c-73b0dafb74b8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4e400ac750bd516829ca45b16e3e3c78306f1c9916f44b424d79e954125c3372"
+  },
+  "id": "YCjnQdvKEtyhmKhz",
+  "tags": []
+}
